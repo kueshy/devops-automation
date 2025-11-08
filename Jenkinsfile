@@ -84,7 +84,6 @@ pipeline {
         SERVER_REGISTRY_CREDENTIALS = 'registry-credentials'
 //         DOCKER_IMAGE = "${APP_NAME}"
         DOCKER_IMAGE = "${DOCKER_REGISTRY}/${APP_NAME}".toLowerCase()
-        IMAGE_TAG = Math.abs(new Random().nextInt(2000000000)).toString()
 
         // Maven configuration
         MAVEN_OPTS = '-Xmx2048m -Xms1024m'
@@ -99,7 +98,8 @@ pipeline {
             script: "git rev-parse --short HEAD",
             returnStdout: true
         ).trim()
-        IMAGE_TAG = "${VERSION}-${GIT_COMMIT_SHORT}"
+//         IMAGE_TAG = "${VERSION}-${GIT_COMMIT_SHORT}"
+        IMAGE_TAG = Math.abs(new Random().nextInt(2000000000)).toString()
     }
 
     parameters {
