@@ -82,7 +82,8 @@ pipeline {
         DOCKER_REGISTRY_NAME = 'codedev001'
         DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
         SERVER_REGISTRY_CREDENTIALS = 'registry-credentials'
-        DOCKER_IMAGE = "${DOCKER_REGISTRY_NAME}/${APP_NAME}"
+        DOCKER_IMAGE = "${APP_NAME}"
+//         DOCKER_IMAGE = "${DOCKER_REGISTRY_NAME}/${APP_NAME}"
 
         // Maven configuration
         MAVEN_OPTS = '-Xmx2048m -Xms1024m'
@@ -363,7 +364,8 @@ pipeline {
                            returnStdout: true
                        ).trim()
                        def imageTag = "${version}-${gitCommit}"
-                       def dockerImage = "${registryName}/${appName}".toLowerCase()
+//                        def dockerImage = "${appName}".toLowerCase()
+                       def dockerImage = "${DOCKER_REGISTRY}/${appName}".toLowerCase()
 
                        echo "Docker image: ${dockerImage}:${imageTag}"
 
@@ -421,6 +423,31 @@ pipeline {
 //             }
 //         }
 //
+//         stage('Push to Registry') {
+//             when {
+//                 anyOf {
+//                     branch 'develop'
+//                     branch 'staging'
+//                     branch 'main'
+//                 }
+//             }
+//             steps {
+//                 script {
+//                     echo "Pushing Docker image to registry..."
+//
+//                     docker.withRegistry("http://${DOCKER_REGISTRY}", SERVER_REGISTRY_CREDENTIALS) {
+//                         bat """
+//                             docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
+//                         """
+//                     }
+//
+//                     echo "Image pushed: ${DOCKER_IMAGE}:${IMAGE_TAG}"
+//                 }
+//             }
+//         }
+
+        // docker push ${DOCKER_IMAGE}:${ENVIRONMENT}-latest
+
         stage('Push to Registry') {
 //             when {
 //                 anyOf {
@@ -431,20 +458,30 @@ pipeline {
 //             }
             steps {
                 script {
-                    echo "Pushing Docker image to registry..."
+                    echo "Pushing Docker image to private registry..."
 
-                    docker.withRegistry("http://${DOCKER_REGISTRY}", SERVER_REGISTRY_CREDENTIALS) {
+                    // Define your registry info
+                    def registryHost = "192.168.4.39:5000" // your registry address
+                    def dockerImage = "${registryHost}/${DOCKER_IMAGE}"
+
+                    echo "Full image name: ${dockerImage}:${IMAGE_TAG}"
+
+                    // Tag image for private registry
+                    bat "docker tag ${DOCKER_IMAGE}:${IMAGE_TAG} ${dockerImage}:${IMAGE_TAG}"
+
+                    // Login and push using Jenkins credentials
+                    withCredentials([usernamePassword(credentialsId: 'SERVER_REGISTRY_CREDENTIALS', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
                         bat """
-                            docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
+                            docker login ${registryHost} -u %REG_USER% -p %REG_PASS%
+                            docker push ${dockerImage}:${IMAGE_TAG}
+                            docker logout ${registryHost}
                         """
                     }
 
-                    echo "Image pushed: ${DOCKER_IMAGE}:${IMAGE_TAG}"
+                    echo "✅ Image pushed successfully to ${registryHost}"
                 }
             }
         }
-
-        // docker push ${DOCKER_IMAGE}:${ENVIRONMENT}-latest
 
 //         stage('Deploy to Server') {
 //                     steps {
