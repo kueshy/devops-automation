@@ -163,7 +163,7 @@ pipeline {
                     steps {
                         script {
                             echo "Running Checkstyle..."
-                            sh 'mvn checkstyle:check -B'
+                            bat 'mvn checkstyle:check -B'
                         }
                     }
                 }
@@ -172,7 +172,7 @@ pipeline {
                     steps {
                         script {
                             echo "Running PMD..."
-                            sh 'mvn pmd:check -B'
+                            bat 'mvn pmd:check -B'
                         }
                     }
                 }
@@ -181,7 +181,7 @@ pipeline {
                     steps {
                         script {
                             echo "Running SpotBugs..."
-                            sh 'mvn spotbugs:check -B'
+                            bat 'mvn spotbugs:check -B'
                         }
                     }
                 }
