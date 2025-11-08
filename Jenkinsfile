@@ -192,7 +192,7 @@ pipeline {
             steps {
                 script {
                     echo "Building application..."
-                    sh '''
+                    bat '''
                         mvn clean compile \
                             -DskipTests=true \
                             -B -V
