@@ -359,7 +359,7 @@ pipeline {
                        def version = env.BUILD_NUMBER
                        def gitCommit = bat(script: "git rev-parse --short HEAD", returnStdout: true).trim()
                        def imageTag = "${version}-${gitCommit}"
-                       def dockerImage = "${registryName}/${appName}".toLowerCase()
+                       def dockerImage = "${registryName}_${appName}".toLowerCase()
 
                        echo "Docker image: ${dockerImage}:${imageTag}"
 
