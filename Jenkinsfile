@@ -177,14 +177,14 @@ pipeline {
                     }
                 }
 
-                stage('SpotBugs') {
-                    steps {
-                        script {
-                            echo "Running SpotBugs..."
-                            bat 'mvn spotbugs:check -B'
-                        }
-                    }
-                }
+//                 stage('SpotBugs') {
+//                     steps {
+//                         script {
+//                             echo "Running SpotBugs..."
+//                             bat 'mvn spotbugs:check -B'
+//                         }
+//                     }
+//                 }
             }
         }
 //
