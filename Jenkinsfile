@@ -35,3 +35,35 @@
 //         }
 //     }
 // }
+
+pipeline{
+    agent any
+    tools {
+        maven 'maven_3_9_11'
+    }
+    stages {
+        stage('Build Maven'){
+            steps{
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/kueshy/devops-automation']])
+                bat 'mvn clean install'
+            }
+        }
+        stage('Build Docker Image'){
+            steps{
+                script {
+                    bat 'docker build -t codedev001/devops-integration .'
+                }
+            }
+        }
+        stage('Push Docker Image to Docker Hub'){
+            steps{
+                script {
+                    withCredentials([string(credentialsId: 'dockerhub_pwd', variable: 'dockerhub_pwd')]) {
+                        bat "docker login -u codedev001 -p ${dockerhub_pwd}"
+                        bat "docker push codedev001/devops-integration"
+                    }
+                }
+            }
+        }
+    }
+}
