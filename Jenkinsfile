@@ -126,13 +126,13 @@ pipeline {
         githubPush()
     }
 
-    options {
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-        timeout(time: 1, unit: 'HOURS')
-        disableConcurrentBuilds()
-        timestamps()
-        ansiColor('xterm')
-    }
+//     options {
+//         buildDiscarder(logRotator(numToKeepStr: '10'))
+//         timeout(time: 1, unit: 'HOURS')
+//         disableConcurrentBuilds()
+//         timestamps()
+//         ansiColor('xterm')
+//     }
 
     stages {
         stage('Checkout') {
