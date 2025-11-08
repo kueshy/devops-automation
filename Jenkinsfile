@@ -82,8 +82,9 @@ pipeline {
         DOCKER_REGISTRY_NAME = 'codedev001'
         DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
         SERVER_REGISTRY_CREDENTIALS = 'registry-credentials'
-        DOCKER_IMAGE = "${APP_NAME}"
-//         DOCKER_IMAGE = "${DOCKER_REGISTRY_NAME}/${APP_NAME}"
+//         DOCKER_IMAGE = "${APP_NAME}"
+        DOCKER_IMAGE = "${DOCKER_REGISTRY}/${APP_NAME}".toLowerCase()
+        IMAGE_TAG = Math.abs(new Random().nextInt(2000000000)).toString()
 
         // Maven configuration
         MAVEN_OPTS = '-Xmx2048m -Xms1024m'
@@ -364,7 +365,7 @@ pipeline {
                            returnStdout: true
                        ).trim()
 //                        def imageTag = "${version}-${gitCommit}"
-                       def imageTag = Math.abs(new Random().nextInt(2000000000)).toString()
+                       def imageTag = "${IMAGE_TAG}" //Math.abs(new Random().nextInt(2000000000)).toString()
 //                        def dockerImage = "${appName}".toLowerCase()
                        def dockerImage = "${DOCKER_REGISTRY}/${appName}".toLowerCase()
 
