@@ -79,8 +79,9 @@ pipeline {
 
         // Docker configuration
         DOCKER_REGISTRY = 'docker.io'
+        DOCKER_REGISTRY_NAME = 'codedev001'
         DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
-        DOCKER_IMAGE = "${DOCKER_REGISTRY}/${APP_NAME}"
+        DOCKER_IMAGE = "${DOCKER_REGISTRY_NAME}/${APP_NAME}"
 
         // Maven configuration
         MAVEN_OPTS = '-Xmx2048m -Xms1024m'
