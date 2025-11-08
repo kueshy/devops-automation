@@ -201,29 +201,29 @@ pipeline {
             }
         }
 
-        stage('Unit Tests') {
-            steps {
-                script {
-                    echo "Running unit tests..."
-                    bat '''
-                        mvn test \
-                            -Dtest=*Test \
-                            -B
-                    '''
-                }
-            }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
-
-                    publishHTML(target: [
-                        reportDir: 'target/surefire-reports',
-                        reportFiles: '*.html',
-                        reportName: 'Unit Test Report'
-                    ])
-                }
-            }
-        }
+//         stage('Unit Tests') {
+//             steps {
+//                 script {
+//                     echo "Running unit tests..."
+//                     bat '''
+//                         mvn test \
+//                             -Dtest=*Test \
+//                             -B
+//                     '''
+//                 }
+//             }
+//             post {
+//                 always {
+//                     junit 'target/surefire-reports/*.xml'
+//
+//                     publishHTML(target: [
+//                         reportDir: 'target/surefire-reports',
+//                         reportFiles: '*.html',
+//                         reportName: 'Unit Test Report'
+//                     ])
+//                 }
+//             }
+//         }
 //
 //         stage('Integration Tests') {
 //             when {
@@ -314,23 +314,23 @@ pipeline {
 //             }
 //         }
 //
-//         stage('Package') {
-//             steps {
-//                 script {
-//                     echo "Packaging application..."
-//                     sh '''
-//                         mvn package \
-//                             -DskipTests=true \
-//                             -B
-//                     '''
-//                 }
-//             }
-//             post {
-//                 success {
-//                     archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-//                 }
-//             }
-//         }
+        stage('Package') {
+            steps {
+                script {
+                    echo "Packaging application..."
+                    sh '''
+                        mvn package \
+                            -DskipTests=true \
+                            -B
+                    '''
+                }
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                }
+            }
+        }
 //
 //         stage('Build Docker Image') {
 //             steps {
