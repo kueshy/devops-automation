@@ -78,9 +78,10 @@ pipeline {
         APP_NAME = 'devops-automation'
 
         // Docker configuration
-        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_REGISTRY = '192.168.4.39:5000'
         DOCKER_REGISTRY_NAME = 'codedev001'
         DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
+        SERVER_REGISTRY_CREDENTIALS = 'registry-credentials'
         DOCKER_IMAGE = "${DOCKER_REGISTRY_NAME}/${APP_NAME}"
 
         // Maven configuration
@@ -432,10 +433,9 @@ pipeline {
                 script {
                     echo "Pushing Docker image to registry..."
 
-                    docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
+                    docker.withRegistry("http://${DOCKER_REGISTRY}", SERVER_REGISTRY_CREDENTIALS) {
                         bat """
                             docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
-                            docker push ${DOCKER_IMAGE}:${ENVIRONMENT}-latest
                         """
                     }
 
@@ -443,6 +443,75 @@ pipeline {
                 }
             }
         }
+
+        // docker push ${DOCKER_IMAGE}:${ENVIRONMENT}-latest
+
+//         stage('Deploy to Server') {
+//                     steps {
+//                         script {
+//                             echo "🚀 Deploying to ${params.ENVIRONMENT}..."
+//
+//                             // Choose deployment method
+//                             switch(params.DEPLOYMENT_TYPE) {
+//                                 case 'docker-compose':
+//                                     deployWithDockerCompose()
+//                                     break
+//                                 case 'docker-swarm':
+//                                     deployWithDockerSwarm()
+//                                     break
+//                                 case 'kubernetes':
+//                                     deployToKubernetes()
+//                                     break
+//                                 case 'manual':
+//                                     deployManually()
+//                                     break
+//                                 default:
+//                                     error "Unknown deployment type: ${params.DEPLOYMENT_TYPE}"
+//                             }
+//                         }
+//                     }
+//                 }
+//
+//                 stage('Health Check') {
+//                     steps {
+//                         script {
+//                             echo "🏥 Running health checks..."
+//
+//                             // Wait for application to start
+//                             sleep(time: 30, unit: 'SECONDS')
+//
+//                             // Health check with retry
+//                             def healthCheckPassed = false
+//                             def maxRetries = 5
+//
+//                             for (int i = 0; i < maxRetries; i++) {
+//                                 try {
+//                                     def response = sh(
+//                                         script: """
+//                                             curl -f -s -o /dev/null -w "%{http_code}" \
+//                                             http://${DEPLOY_SERVER}:${APP_PORT}/actuator/health
+//                                         """,
+//                                         returnStdout: true
+//                                     ).trim()
+//
+//                                     if (response == '200') {
+//                                         echo "✅ Health check passed!"
+//                                         healthCheckPassed = true
+//                                         break
+//                                     }
+//                                 } catch (Exception e) {
+//                                     echo "Health check attempt ${i + 1} failed, retrying..."
+//                                     sleep(time: 10, unit: 'SECONDS')
+//                                 }
+//                             }
+//
+//                             if (!healthCheckPassed) {
+//                                 error "Health check failed after ${maxRetries} attempts"
+//                             }
+//                         }
+//                     }
+//                 }
+
 //
 //         stage('🚀 Deploy to Kubernetes') {
 //             when {
@@ -606,3 +675,135 @@ pipeline {
 //         }
 //     }
 }
+
+// ===== 2. Deployment Functions =====
+
+// def deployWithDockerCompose() {
+//     echo "Deploying with Docker Compose..."
+//
+//     sshagent(credentials: ['deploy-ssh-key']) {
+//         bat """
+//             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
+//                 cd /opt/ams-health
+//
+//                 # Update docker-compose.yml with new image
+//                 export IMAGE_TAG=${IMAGE_TAG}
+//
+//                 # Pull new image
+//                 docker-compose pull
+//
+//                 # Stop old containers
+//                 docker-compose down
+//
+//                 # Start new containers
+//                 docker-compose up -d
+//
+//                 # Verify containers are running
+//                 docker-compose ps
+//
+//                 echo "✅ Deployment completed!"
+// EOF
+//         """
+//     }
+// }
+//
+// def deployWithDockerSwarm() {
+//     echo "Deploying with Docker Swarm..."
+//
+//     sshagent(credentials: ['deploy-ssh-key']) {
+//         bat """
+//             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
+//                 # Update service
+//                 docker service update \
+//                     --image ${DOCKER_IMAGE}:${IMAGE_TAG} \
+//                     --update-parallelism 1 \
+//                     --update-delay 10s \
+//                     ${CONTAINER_NAME}
+//
+//                 # Wait for rollout
+//                 docker service ps ${CONTAINER_NAME}
+//
+//                 echo "✅ Swarm deployment completed!"
+// EOF
+//         """
+//     }
+// }
+//
+// def deployToKubernetes() {
+//     echo "Deploying to Kubernetes..."
+//
+//     withKubeConfig([credentialsId: 'kubeconfig-credentials']) {
+//         bat """
+//             # Update deployment image
+//             kubectl set image deployment/${K8S_DEPLOYMENT} \
+//                 ${K8S_DEPLOYMENT}=${DOCKER_IMAGE}:${IMAGE_TAG} \
+//                 -n ${K8S_NAMESPACE}
+//
+//             # Wait for rollout
+//             kubectl rollout status deployment/${K8S_DEPLOYMENT} \
+//                 -n ${K8S_NAMESPACE} \
+//                 --timeout=5m
+//
+//             # Verify pods
+//             kubectl get pods -n ${K8S_NAMESPACE} -l app=${K8S_DEPLOYMENT}
+//
+//             echo "✅ Kubernetes deployment completed!"
+//         """
+//     }
+// }
+//
+// def deployManually() {
+//     echo "Deploying manually with Docker commands..."
+//
+//     sshagent(credentials: ['deploy-ssh-key']) {
+//         bat """
+//             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
+//                 # Pull new image
+//                 docker pull ${DOCKER_IMAGE}:${IMAGE_TAG}
+//
+//                 # Stop old container
+//                 docker stop ${CONTAINER_NAME} 2>/dev/null || true
+//                 docker rm ${CONTAINER_NAME} 2>/dev/null || true
+//
+//                 # Start new container
+//                 docker run -d \
+//                     --name ${CONTAINER_NAME} \
+//                     --restart unless-stopped \
+//                     -p ${APP_PORT}:8080 \
+//                     -e SPRING_PROFILES_ACTIVE=${params.ENVIRONMENT} \
+//                     -e DATABASE_URL=\${DATABASE_URL} \
+//                     -e DATABASE_USERNAME=\${DATABASE_USERNAME} \
+//                     -e DATABASE_PASSWORD=\${DATABASE_PASSWORD} \
+//                     ${DOCKER_IMAGE}:${IMAGE_TAG}
+//
+//                 # Verify container is running
+//                 docker ps | grep ${CONTAINER_NAME}
+//
+//                 echo "✅ Manual deployment completed!"
+// EOF
+//         """
+//     }
+// }
+//
+// def rollbackDeployment(previousImage) {
+//     echo "Rolling back to previous image: ${previousImage}..."
+//
+//     sshagent(credentials: ['deploy-ssh-key']) {
+//         bat """
+//             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
+//                 # Stop current container
+//                 docker stop ${CONTAINER_NAME}
+//                 docker rm ${CONTAINER_NAME}
+//
+//                 # Start previous version
+//                 docker run -d \
+//                     --name ${CONTAINER_NAME} \
+//                     --restart unless-stopped \
+//                     -p ${APP_PORT}:8080 \
+//                     ${previousImage}
+//
+//                 echo "✅ Rollback completed!"
+// EOF
+//         """
+//     }
+// }
