@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class JenkinsDemoApplication {
 
-	@GetMapping
-	public String testJenkins(){
-		return "Hello Jenkins";
-	}
+    @GetMapping
+    public String testJenkins() {
+        return "Hello Jenkins";
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(JenkinsDemoApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(JenkinsDemoApplication.class, args);
+    }
 
 }
