@@ -333,21 +333,45 @@ pipeline {
             }
         }
 //
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    echo "Building Docker image..."
+//         stage('Build Docker Image') {
+//             steps {
+//                 script {
+//                     echo "Building Docker image..."
+//
+//                     docker.build(
+//                         "${DOCKER_IMAGE}:${IMAGE_TAG}",
+//                         "--build-arg JAR_FILE=target/${APP_NAME}.jar ."
+//                     )
+//
+//                     // Tag as latest for the environment
+//                     bat "docker tag ${DOCKER_IMAGE}:${IMAGE_TAG} ${DOCKER_IMAGE}:${ENVIRONMENT}-latest"
+//                 }
+//             }
+//         }
 
-                    docker.build(
-                        "${DOCKER_IMAGE}:${IMAGE_TAG}",
-                        "--build-arg JAR_FILE=target/${APP_NAME}.jar ."
-                    )
+           stage('Build Docker Image') {
+               steps {
+                   script {
+                       echo "Building Docker image..."
 
-                    // Tag as latest for the environment
-                    bat "docker tag ${DOCKER_IMAGE}:${IMAGE_TAG} ${DOCKER_IMAGE}:${ENVIRONMENT}-latest"
-                }
-            }
-        }
+                       def registryName = "codedev001"
+                       def appName = "devops-automation"
+                       def version = env.BUILD_NUMBER
+                       def gitCommit = bat(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                       def imageTag = "${version}-${gitCommit}"
+                       def dockerImage = "${registryName}/${appName}".toLowerCase()
+
+                       echo "Docker image: ${dockerImage}:${imageTag}"
+
+                       // Build
+                       docker.build("${dockerImage}:${imageTag}", "--build-arg JAR_FILE=target/${appName}.jar .")
+
+                       // Tag as latest for this environment
+                       bat "docker tag ${dockerImage}:${imageTag} ${dockerImage}:${env.ENVIRONMENT}-latest"
+                   }
+               }
+           }
+
 //
 //         stage('Image Security Scan') {
 //             when {
