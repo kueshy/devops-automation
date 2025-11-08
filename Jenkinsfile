@@ -157,36 +157,36 @@ pipeline {
             }
         }
 
-//         stage('Code Analysis') {
-//             parallel {
-//                 stage('Checkstyle') {
-//                     steps {
-//                         script {
-//                             echo "Running Checkstyle..."
-//                             sh 'mvn checkstyle:check -B'
-//                         }
-//                     }
-//                 }
+        stage('Code Analysis') {
+            parallel {
+                stage('Checkstyle') {
+                    steps {
+                        script {
+                            echo "Running Checkstyle..."
+                            sh 'mvn checkstyle:check -B'
+                        }
+                    }
+                }
 //
-//                 stage('PMD') {
-//                     steps {
-//                         script {
-//                             echo "Running PMD..."
-//                             sh 'mvn pmd:check -B'
-//                         }
-//                     }
-//                 }
+                stage('PMD') {
+                    steps {
+                        script {
+                            echo "Running PMD..."
+                            sh 'mvn pmd:check -B'
+                        }
+                    }
+                }
 //
-//                 stage('SpotBugs') {
-//                     steps {
-//                         script {
-//                             echo "Running SpotBugs..."
-//                             sh 'mvn spotbugs:check -B'
-//                         }
-//                     }
-//                 }
-//             }
-//         }
+                stage('SpotBugs') {
+                    steps {
+                        script {
+                            echo "Running SpotBugs..."
+                            sh 'mvn spotbugs:check -B'
+                        }
+                    }
+                }
+            }
+        }
 //
 //         stage('Build') {
 //             steps {
