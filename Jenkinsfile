@@ -332,21 +332,21 @@ pipeline {
             }
         }
 //
-//         stage('Build Docker Image') {
-//             steps {
-//                 script {
-//                     echo "Building Docker image..."
-//
-//                     docker.build(
-//                         "${DOCKER_IMAGE}:${IMAGE_TAG}",
-//                         "--build-arg JAR_FILE=target/${APP_NAME}.jar ."
-//                     )
-//
-//                     // Tag as latest for the environment
-//                     sh "docker tag ${DOCKER_IMAGE}:${IMAGE_TAG} ${DOCKER_IMAGE}:${ENVIRONMENT}-latest"
-//                 }
-//             }
-//         }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building Docker image..."
+
+                    docker.build(
+                        "${DOCKER_IMAGE}:${IMAGE_TAG}",
+                        "--build-arg JAR_FILE=target/${APP_NAME}.jar ."
+                    )
+
+                    // Tag as latest for the environment
+                    bat "docker tag ${DOCKER_IMAGE}:${IMAGE_TAG} ${DOCKER_IMAGE}:${ENVIRONMENT}-latest"
+                }
+            }
+        }
 //
 //         stage('Image Security Scan') {
 //             when {
