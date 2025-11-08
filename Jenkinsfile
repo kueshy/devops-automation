@@ -423,8 +423,9 @@ pipeline {
         stage('Push to Registry') {
             when {
                 anyOf {
-                    branch 'main'
                     branch 'develop'
+                    branch 'staging'
+                    branch 'main'
                 }
             }
             steps {
