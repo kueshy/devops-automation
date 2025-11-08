@@ -102,7 +102,7 @@ pipeline {
     parameters {
         choice(
             name: 'ENVIRONMENT',
-            choices: ['dev', 'staging', 'main'],
+            choices: ['develop', 'staging', 'main'],
             description: 'Target deployment environment'
         )
         booleanParam(
