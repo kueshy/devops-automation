@@ -200,30 +200,30 @@ pipeline {
                 }
             }
         }
-//
-//         stage('Unit Tests') {
-//             steps {
-//                 script {
-//                     echo "Running unit tests..."
-//                     sh '''
-//                         mvn test \
-//                             -Dtest=*Test \
-//                             -B
-//                     '''
-//                 }
-//             }
-//             post {
-//                 always {
-//                     junit 'target/surefire-reports/*.xml'
-//
-//                     publishHTML(target: [
-//                         reportDir: 'target/surefire-reports',
-//                         reportFiles: '*.html',
-//                         reportName: 'Unit Test Report'
-//                     ])
-//                 }
-//             }
-//         }
+
+        stage('Unit Tests') {
+            steps {
+                script {
+                    echo "Running unit tests..."
+                    sh '''
+                        mvn test \
+                            -Dtest=*Test \
+                            -B
+                    '''
+                }
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+
+                    publishHTML(target: [
+                        reportDir: 'target/surefire-reports',
+                        reportFiles: '*.html',
+                        reportName: 'Unit Test Report'
+                    ])
+                }
+            }
+        }
 //
 //         stage('Integration Tests') {
 //             when {
