@@ -318,7 +318,7 @@ pipeline {
             steps {
                 script {
                     echo "Packaging application..."
-                    sh '''
+                    bat '''
                         mvn package \
                             -DskipTests=true \
                             -B
