@@ -167,7 +167,7 @@ pipeline {
                         }
                     }
                 }
-//
+
                 stage('PMD') {
                     steps {
                         script {
@@ -176,7 +176,7 @@ pipeline {
                         }
                     }
                 }
-//
+
                 stage('SpotBugs') {
                     steps {
                         script {
