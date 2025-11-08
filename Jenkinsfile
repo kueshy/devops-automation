@@ -474,6 +474,7 @@ pipeline {
                         bat """
                             docker login ${registryHost} -u %REG_USER% -p %REG_PASS%
                             docker push ${dockerImage}:${IMAGE_TAG}
+                            docker push ${dockerImage}:latest
                             docker logout ${registryHost}
                         """
                     }
