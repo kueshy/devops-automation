@@ -73,6 +73,8 @@
 pipeline {
     agent any
 
+    echo "Begin Pipeline Process "
+
     environment {
         // Application info
         APP_NAME = 'devops-automation'
