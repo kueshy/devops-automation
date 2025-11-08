@@ -372,8 +372,6 @@ pipeline {
                }
            }
 
-
-//
 //         stage('Image Security Scan') {
 //             when {
 //                 expression { params.RUN_SECURITY_SCAN }
@@ -422,28 +420,28 @@ pipeline {
 //             }
 //         }
 //
-//         stage('Push to Registry') {
-//             when {
-//                 anyOf {
-//                     branch 'main'
-//                     branch 'develop'
-//                 }
-//             }
-//             steps {
-//                 script {
-//                     echo "Pushing Docker image to registry..."
-//
-//                     docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
-//                         sh """
-//                             docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
-//                             docker push ${DOCKER_IMAGE}:${ENVIRONMENT}-latest
-//                         """
-//                     }
-//
-//                     echo "Image pushed: ${DOCKER_IMAGE}:${IMAGE_TAG}"
-//                 }
-//             }
-//         }
+        stage('Push to Registry') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'develop'
+                }
+            }
+            steps {
+                script {
+                    echo "Pushing Docker image to registry..."
+
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
+                        bat """
+                            docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
+                            docker push ${DOCKER_IMAGE}:${ENVIRONMENT}-latest
+                        """
+                    }
+
+                    echo "Image pushed: ${DOCKER_IMAGE}:${IMAGE_TAG}"
+                }
+            }
+        }
 //
 //         stage('🚀 Deploy to Kubernetes') {
 //             when {
