@@ -505,7 +505,7 @@ pipeline {
                     script {
                         echo "Pushing Docker image to registry..."
 
-                        withCredentials([usernamePassword(credentialsId: 'SERVER_REGISTRY_CREDENTIALS',
+                        withCredentials([usernamePassword(credentialsId: SERVER_REGISTRY_CREDENTIALS,
                                                           usernameVariable: 'REG_USER',
                                                           passwordVariable: 'REG_PASS')]) {
                             bat """
