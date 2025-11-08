@@ -205,7 +205,7 @@ pipeline {
             steps {
                 script {
                     echo "Running unit tests..."
-                    sh '''
+                    bat '''
                         mvn test \
                             -Dtest=*Test \
                             -B
