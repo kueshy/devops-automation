@@ -421,13 +421,13 @@ pipeline {
 //         }
 //
         stage('Push to Registry') {
-            when {
-                anyOf {
-                    branch 'develop'
-                    branch 'staging'
-                    branch 'main'
-                }
-            }
+//             when {
+//                 anyOf {
+//                     branch 'develop'
+//                     branch 'staging'
+//                     branch 'main'
+//                 }
+//             }
             steps {
                 script {
                     echo "Pushing Docker image to registry..."
