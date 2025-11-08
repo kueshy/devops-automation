@@ -357,20 +357,21 @@ pipeline {
                        def registryName = "codedev001"
                        def appName = "devops-automation"
                        def version = env.BUILD_NUMBER
-                       def gitCommit = bat(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                       def gitCommit = bat(
+                           script: "@echo off && for /f %%i in ('git rev-parse --short HEAD') do echo %%i",
+                           returnStdout: true
+                       ).trim()
                        def imageTag = "${version}-${gitCommit}"
-                       def dockerImage = "${registryName}_${appName}".toLowerCase()
+                       def dockerImage = "${registryName}/${appName}".toLowerCase()
 
                        echo "Docker image: ${dockerImage}:${imageTag}"
 
-                       // Build
                        docker.build("${dockerImage}:${imageTag}", "--build-arg JAR_FILE=target/${appName}.jar .")
-
-                       // Tag as latest for this environment
                        bat "docker tag ${dockerImage}:${imageTag} ${dockerImage}:${env.ENVIRONMENT}-latest"
                    }
                }
            }
+
 
 //
 //         stage('Image Security Scan') {
