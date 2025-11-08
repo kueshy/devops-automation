@@ -356,7 +356,7 @@ pipeline {
                    script {
                        echo "Building Docker image..."
 
-                       def registryName = "codedev001"
+                       def registryHost = "192.168.4.39:5000"
                        def appName = "devops-automation"
                        def version = env.BUILD_NUMBER
                        def gitCommit = bat(
@@ -368,14 +368,21 @@ pipeline {
 //                        def dockerImage = "${appName}".toLowerCase()
                        def dockerImage = "${DOCKER_REGISTRY}/${appName}".toLowerCase()
 
+                       echo "Building image tag: ${imageTag}"
+
                        echo "Docker image: ${dockerImage}:${imageTag}"
 
-                       docker.build("${dockerImage}:${imageTag}", "--build-arg JAR_FILE=target/${appName}.jar .")
+                       docker.build("${appName}:${imageTag}", "--build-arg JAR_FILE=target/${appName}.jar .")
 //                        bat "docker tag ${dockerImage}:${imageTag} ${dockerImage}:${env.ENVIRONMENT}-latest"
+
+                       bat "docker images ${appName}:${imageTag}"
+
                        bat """
                            docker tag ${appName}:${imageTag} ${dockerImage}:${imageTag}
                            docker tag ${appName}:${imageTag} ${dockerImage}:latest
                        """
+
+                       echo "Docker image built and tagged: ${dockerImage}:${imageTag}"
 
                        // Save values for later stages
                        env.DOCKER_IMAGE = dockerImage
