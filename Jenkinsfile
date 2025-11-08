@@ -141,7 +141,7 @@ pipeline {
                     echo "Checking out code from Git..."
                     checkout scm
 
-                    sh '''
+                    bat '''
                         echo "============================================"
                         echo "Build Information"
                         echo "============================================"
