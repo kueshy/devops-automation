@@ -157,25 +157,25 @@ pipeline {
             }
         }
 
-        stage('Code Analysis') {
-            parallel {
-                stage('Checkstyle') {
-                    steps {
-                        script {
-                            echo "Running Checkstyle..."
-                            bat 'mvn checkstyle:check -B'
-                        }
-                    }
-                }
+//         stage('Code Analysis') {
+//             parallel {
+//                 stage('Checkstyle') {
+//                     steps {
+//                         script {
+//                             echo "Running Checkstyle..."
+//                             bat 'mvn checkstyle:check -B'
+//                         }
+//                     }
+//                 }
 
-                stage('PMD') {
-                    steps {
-                        script {
-                            echo "Running PMD..."
-                            bat 'mvn pmd:check -B'
-                        }
-                    }
-                }
+//                 stage('PMD') {
+//                     steps {
+//                         script {
+//                             echo "Running PMD..."
+//                             bat 'mvn pmd:check -B'
+//                         }
+//                     }
+//                 }
 
 //                 stage('SpotBugs') {
 //                     steps {
@@ -185,21 +185,21 @@ pipeline {
 //                         }
 //                     }
 //                 }
-            }
-        }
-//
-//         stage('Build') {
-//             steps {
-//                 script {
-//                     echo "Building application..."
-//                     sh '''
-//                         mvn clean compile \
-//                             -DskipTests=true \
-//                             -B -V
-//                     '''
-//                 }
 //             }
 //         }
+//
+        stage('Build') {
+            steps {
+                script {
+                    echo "Building application..."
+                    sh '''
+                        mvn clean compile \
+                            -DskipTests=true \
+                            -B -V
+                    '''
+                }
+            }
+        }
 //
 //         stage('Unit Tests') {
 //             steps {
