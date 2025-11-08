@@ -91,7 +91,7 @@ pipeline {
 
         // Version management
         VERSION = "${env.BUILD_NUMBER}"
-        GIT_COMMIT_SHORT = sh(
+        GIT_COMMIT_SHORT = bat(
             script: "git rev-parse --short HEAD",
             returnStdout: true
         ).trim()
