@@ -699,7 +699,7 @@ def deployWithDockerCompose() {
                 "cd /opt/ci-cd-pipeline && \
                  echo ===================================================== && \
                  echo Logging into private Docker registry... && \
-                 docker login %DOCKER_REGISTRY% -u %REGISTRY_CREDENTIALS_USR% -p %REGISTRY_CREDENTIALS_PSW% && \
+                 docker login %DOCKER_REGISTRY% -u ams -p %REGISTRY_CREDENTIALS_PSW% && \
                  echo ===================================================== && \
                  echo Pulling latest image version... && \
                  docker-compose pull && \
