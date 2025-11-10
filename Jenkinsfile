@@ -697,6 +697,7 @@ def deployWithDockerCompose() {
                 # echo 'REGISTRY=${PRIVATE_REGISTRY}' >> .env
 
                 # Login to registry
+                echo "Login to registry"
                 docker login ${PRIVATE_REGISTRY} -u ${REGISTRY_CREDENTIALS_USR} -p ${REGISTRY_CREDENTIALS_PSW}
 
                 # Pull and restart
