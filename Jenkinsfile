@@ -702,7 +702,7 @@ def deployWithDockerCompose() {
 //     sshagent(credentials: [SERVER_SSH_CREDENTIALS]) {
     withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
         bat """
-            ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
+            ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER}
                 cd /opt/ci-cd-pipeline
 
                 # Update docker-compose.yml with new image
@@ -724,7 +724,6 @@ def deployWithDockerCompose() {
                 docker-compose ps
 
                 echo "✅ Deployment completed!"
-EOF
         """
     }
 }
