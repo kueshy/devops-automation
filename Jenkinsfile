@@ -441,6 +441,17 @@ pipeline {
                 }
             }
 
+            stage('Test SSH Connection') {
+                steps {
+                    withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
+                        bat '''
+                            echo "Testing SSH connection to $SSH_USER@192.168.4.39 ..."
+                            sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@192.168.4.39 "echo Connected successfully && hostname && uptime"
+                        '''
+                    }
+                }
+            }
+
             stage('Deploy to Server') {
                 steps {
                     script {
@@ -675,6 +686,18 @@ pipeline {
 
 def deployWithDockerCompose() {
     echo "Deploying with Docker Compose..."
+
+//    withCredentials([sshUserPrivateKey(credentialsId: 'SERVER_SSH_CREDENTIALS', keyFileVariable: 'SSH_KEY')]) {
+//            sh """
+//            ssh -i $SSH_KEY -o StrictHostKeyChecking=no root@192.168.4.39 '
+//                cd /opt/devops-automation &&
+//                sed -i "s|image: 192.168.4.39:5000/devops-automation:.*|image: 192.168.4.39:5000/devops-automation:${imageTag}|" docker-compose.yml &&
+//                docker-compose pull &&
+//                docker-compose down &&
+//                docker-compose up -d
+//            '
+//            """
+//        }
 
     sshagent(credentials: [SERVER_SSH_CREDENTIALS]) {
         bat """
