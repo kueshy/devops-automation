@@ -697,7 +697,7 @@ def deployWithDockerCompose() {
             echo ==== Connecting to ${DEPLOY_SERVER} ====
             plink -ssh %SSH_USER%@${DEPLOY_SERVER} -pw %SSH_PASS% ^
                 "cd /opt/ci-cd-pipeline && ^
-                 docker login ${DOCKER_REGISTRY} -u ${REGISTRY_CREDENTIALS_USR} -p ${REGISTRY_CREDENTIALS_PSW} && ^
+                 docker login ${DOCKER_REGISTRY} -u %SSH_USER% -p %SSH_PASS% && ^
                  docker-compose pull && ^
                  docker-compose down && ^
                  docker-compose up -d && ^
