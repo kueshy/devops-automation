@@ -441,29 +441,16 @@ pipeline {
                 }
             }
 
-            stage('Install sshpass') {
-                steps {
-                    bat '''
-                        if ! command -v sshpass &> /dev/null; then
-                            echo "Installing sshpass..."
-                            sudo apt-get update && sudo apt-get install -y sshpass
-                        else
-                            echo "sshpass already installed."
-                        fi
-                    '''
-                }
-            }
-
-            stage('Test SSH Connection') {
-                steps {
-                    withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
-                        bat '''
-                            echo "Testing SSH connection to $SSH_USER@192.168.4.39 ..."
-                            sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@192.168.4.39 "echo Connected successfully && hostname && uptime"
-                        '''
-                    }
-                }
-            }
+//             stage('Test SSH Connection') {
+//                 steps {
+//                     withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
+//                         bat '''
+//                             echo "Testing SSH connection to $SSH_USER@192.168.4.39 ..."
+//                             sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@192.168.4.39 "echo Connected successfully && hostname && uptime"
+//                         '''
+//                     }
+//                 }
+//             }
 
             stage('Deploy to Server') {
                 steps {
@@ -712,7 +699,8 @@ def deployWithDockerCompose() {
 //            """
 //        }
 
-    sshagent(credentials: [SERVER_SSH_CREDENTIALS]) {
+//     sshagent(credentials: [SERVER_SSH_CREDENTIALS]) {
+    withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
         bat """
             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
                 cd /opt/ci-cd-pipeline
