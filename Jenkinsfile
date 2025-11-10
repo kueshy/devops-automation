@@ -18,6 +18,8 @@ pipeline {
         DEPLOY_USER = 'root'
         DEPLOY_SERVER = '192.168.4.39'
         SERVER_SSH_CREDENTIALS = 'server-ssh-credentials'
+        REGISTRY_CREDENTIALS_PSW = 'registry-pwd'
+        REGISTRY_CREDENTIALS_USR = 'registry-usr'
 
         // Maven configuration
         MAVEN_OPTS = '-Xmx2048m -Xms1024m'
@@ -685,42 +687,76 @@ pipeline {
 // ===== 2. Deployment Functions =====
 
 def deployWithDockerCompose() {
-    echo "🚀 Deploying using Docker Compose with username/password..."
+    echo "Deploying using Docker Compose with username/password..."
 
     withCredentials([usernamePassword(credentialsId: 'server-ssh-credentials', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
-        // Use PowerShell-compatible command
-        bat """
+        bat '''
+            echo =====================================================
+            echo Connecting to %DEPLOY_SERVER% as %SSH_USER% ...
+            echo =====================================================
 
-
-            echo ==== Connecting to ${DEPLOY_SERVER} ====
-            plink -ssh %SSH_USER%@${DEPLOY_SERVER} -pw %SSH_PASS% ^
-                "cd /opt/ci-cd-pipeline && ^
-
-                 echo ===================================================== && ^
-                 echo 🔐 Logging into private Docker registry... && ^
-                 docker login ${DOCKER_REGISTRY} -u %SSH_USER% -p %SSH_PASS% && ^
-
-                 echo ===================================================== && ^
-                 echo 🔄 Pulling latest image version... && ^
-                 docker-compose pull && ^
-
-                 echo ===================================================== && ^
-                 echo 🧹 Stopping and removing old containers... && ^
-                 docker-compose down && ^
-
-                 echo ===================================================== && ^
-                 echo 🚀 Starting new containers... && ^
-                 docker-compose up -d && ^
-
-                 echo ===================================================== && ^
-                 echo 📋 Verifying container status... && ^
-                 docker-compose ps && ^
-
-                 echo ===================================================== && ^
-                 echo ✅ Deployment completed"
-        """
+            plink -ssh %SSH_USER%@%DEPLOY_SERVER% -pw %SSH_PASS% ^
+                "cd /opt/ci-cd-pipeline && \
+                 echo ===================================================== && \
+                 echo Logging into private Docker registry... && \
+                 docker login %DOCKER_REGISTRY% -u %REGISTRY_CREDENTIALS_USR% -p %REGISTRY_CREDENTIALS_PSW% && \
+                 echo ===================================================== && \
+                 echo Pulling latest image version... && \
+                 docker-compose pull && \
+                 echo ===================================================== && \
+                 echo Stopping and removing old containers... && \
+                 docker-compose down && \
+                 echo ===================================================== && \
+                 echo Starting new containers... && \
+                 docker-compose up -d && \
+                 echo ===================================================== && \
+                 echo Verifying container status... && \
+                 docker-compose ps && \
+                 echo ===================================================== && \
+                 echo Deployment completed successfully!"
+        '''
     }
 }
+
+// def deployWithDockerCompose() {
+//     echo "🚀 Deploying using Docker Compose with username/password..."
+//
+//     withCredentials([usernamePassword(credentialsId: 'server-ssh-credentials', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
+//         // Use PowerShell-compatible command
+//         bat """
+//             # echo open ${DEPLOY_SERVER} > sftp.txt
+//             # echo ${SSH_USER} >> sftp.txt
+//             # echo ${SSH_PASS} >> sftp.txt
+//
+//             echo ==== Connecting to ${DEPLOY_SERVER} ====
+//             plink -ssh %SSH_USER%@${DEPLOY_SERVER} -pw %SSH_PASS% ^
+//                 "cd /opt/ci-cd-pipeline && ^
+//
+//                  echo ===================================================== && ^
+//                  echo 🔐 Logging into private Docker registry... && ^
+//                  docker login ${DOCKER_REGISTRY} -u %SSH_USER% -p %SSH_PASS% && ^
+//
+//                  echo ===================================================== && ^
+//                  echo 🔄 Pulling latest image version... && ^
+//                  docker-compose pull && ^
+//
+//                  echo ===================================================== && ^
+//                  echo 🧹 Stopping and removing old containers... && ^
+//                  docker-compose down && ^
+//
+//                  echo ===================================================== && ^
+//                  echo 🚀 Starting new containers... && ^
+//                  docker-compose up -d && ^
+//
+//                  echo ===================================================== && ^
+//                  echo 📋 Verifying container status... && ^
+//                  docker-compose ps && ^
+//
+//                  echo ===================================================== && ^
+//                  echo ✅ Deployment completed"
+//         """
+//     }
+// }
 
 
 // def deployWithDockerCompose() {
