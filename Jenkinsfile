@@ -690,9 +690,7 @@ def deployWithDockerCompose() {
     withCredentials([usernamePassword(credentialsId: 'server-ssh-credentials', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
         // Use PowerShell-compatible command
         bat """
-            # echo open ${DEPLOY_SERVER} > sftp.txt
-            # echo ${SSH_USER} >> sftp.txt
-            # echo ${SSH_PASS} >> sftp.txt
+
 
             echo ==== Connecting to ${DEPLOY_SERVER} ====
             plink -ssh %SSH_USER%@${DEPLOY_SERVER} -pw %SSH_PASS% ^
