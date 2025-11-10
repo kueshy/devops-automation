@@ -18,7 +18,7 @@ pipeline {
         DEPLOY_USER = 'root'
         DEPLOY_SERVER = '192.168.4.39'
         SERVER_SSH_CREDENTIALS = 'server-ssh-credentials'
-        REGISTRY_CREDENTIALS_PSW = 'registry-pwd'
+        REGISTRY_CREDENTIALS_PSW = 'ams123'
         REGISTRY_CREDENTIALS_USR = 'registry-usr'
 
         // Maven configuration
