@@ -685,7 +685,35 @@ pipeline {
 // ===== 2. Deployment Functions =====
 
 def deployWithDockerCompose() {
-    echo "Deploying with Docker Compose..."
+    echo "Deploying using Docker Compose..."
+
+    sshagent([SERVER_SSH_CREDENTIALS]) {
+        bat """
+            ssh ${DEPLOY_USER}@${DEPLOY_SERVER} "
+                cd /opt/ci-cd-pipeline
+
+                # Update .env file with new image tag
+                # echo 'IMAGE_TAG=${IMAGE_TAG}' > .env
+                # echo 'REGISTRY=${PRIVATE_REGISTRY}' >> .env
+
+                # Login to registry
+                docker login ${PRIVATE_REGISTRY} -u ${REGISTRY_CREDENTIALS_USR} -p ${REGISTRY_CREDENTIALS_PSW}
+
+                # Pull and restart
+                docker-compose pull
+                docker-compose up -d
+
+                # Check status
+                docker-compose ps
+
+                echo '✅ Docker Compose deployment completed!'
+            "
+        """
+    }
+}
+
+// def deployWithDockerCompose() {
+//     echo "Deploying with Docker Compose..."
 
 //    withCredentials([sshUserPrivateKey(credentialsId: 'SERVER_SSH_CREDENTIALS', keyFileVariable: 'SSH_KEY')]) {
 //            sh """
@@ -700,33 +728,70 @@ def deployWithDockerCompose() {
 //        }
 
 //     sshagent(credentials: [SERVER_SSH_CREDENTIALS]) {
-    withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
-        bat """
-            ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER}
-                cd /opt/ci-cd-pipeline
-
-                # Update docker-compose.yml with new image
-                export IMAGE_TAG=${IMAGE_TAG}
-
-                # Pull new image
-                echo "🔄 Pulling latest image..."
-                docker-compose pull
-
-                # Stop old containers
-                echo "🧹 Stopping old containers..."
-                docker-compose down
-
-                # Start new containers
-                echo "🚀 Starting new containers..."
-                docker-compose up -d
-
-                # Verify containers are running
-                docker-compose ps
-
-                echo "✅ Deployment completed!"
-        """
-    }
-}
+//     withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
+//         bat """
+//             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER}
+//                 cd /opt/ci-cd-pipeline
+//
+//                 # Update docker-compose.yml with new image
+//                 export IMAGE_TAG=${IMAGE_TAG}
+//
+//                 # Pull new image
+//                 echo "🔄 Pulling latest image..."
+//                 docker-compose pull
+//
+//                 # Stop old containers
+//                 echo "🧹 Stopping old containers..."
+//                 docker-compose down
+//
+//                 # Start new containers
+//                 echo "🚀 Starting new containers..."
+//                 docker-compose up -d
+//
+//                 # Verify containers are running
+//                 docker-compose ps
+//
+//                 echo "✅ Deployment completed!"
+//         """
+//     }
+//     withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
+//         powershell '''
+//             $server = "192.168.4.39"
+//             $username = $env:SSH_USER
+//             $password = $env:SSH_PASS
+//             $imageTag = $env:IMAGE_TAG
+//
+//             Write-Host "🔗 Connecting to $server as $username ..."
+//
+//             # Verify plink is available
+//             if (-not (Get-Command plink.exe -ErrorAction SilentlyContinue)) {
+//                 Write-Error "❌ plink.exe not found. Please install PuTTY and add it to PATH."
+//                 exit 1
+//             }
+//
+//             $remoteCommand = @"
+//     cd /opt/ci-cd-pipeline
+//     echo '🔄 Pulling latest image...'
+//     docker-compose pull
+//     echo '🧹 Stopping old containers...'
+//     docker-compose down
+//     echo '🚀 Starting new containers...'
+//     docker-compose up -d
+//     docker-compose ps
+//     echo '✅ Deployment completed!'
+//     "@
+//
+//             # Execute remotely
+//             plink.exe -ssh $username@$server -pw $password "$remoteCommand"
+//
+//             if ($LASTEXITCODE -ne 0) {
+//                 Write-Error "❌ Remote deployment failed!"
+//                 exit 1
+//             }
+//         '''
+//     }
+//
+// }
 //
 // def deployWithDockerSwarm() {
 //     echo "Deploying with Docker Swarm..."
