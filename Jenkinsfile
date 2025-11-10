@@ -14,6 +14,11 @@ pipeline {
         SERVER_REGISTRY_CREDENTIALS = 'registry-credentials'
         DOCKER_IMAGE = "${DOCKER_REGISTRY_HOST}/${APP_NAME}".toLowerCase()
 
+        // Deploy
+        DEPLOY_USER = 'root'
+        DEPLOY_SERVER = '192.168.4.39'
+        SERVER_SSH_CREDENTIALS = 'server-ssh-credentials'
+
         // Maven configuration
         MAVEN_OPTS = '-Xmx2048m -Xms1024m'
         JAVA_HOME = tool name: 'JDK17', type: 'jdk'
@@ -666,7 +671,7 @@ pipeline {
 def deployWithDockerCompose() {
     echo "Deploying with Docker Compose..."
 
-    sshagent(credentials: ['deploy-ssh-key']) {
+    sshagent(credentials: [SERVER_SSH_CREDENTIALS]) {
         bat """
             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
                 cd /opt/ci-cd-pipeline
@@ -675,12 +680,15 @@ def deployWithDockerCompose() {
                 export IMAGE_TAG=${IMAGE_TAG}
 
                 # Pull new image
+                echo "🔄 Pulling latest image..."
                 docker-compose pull
 
                 # Stop old containers
+                echo "🧹 Stopping old containers..."
                 docker-compose down
 
                 # Start new containers
+                echo "🚀 Starting new containers..."
                 docker-compose up -d
 
                 # Verify containers are running
