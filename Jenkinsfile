@@ -441,6 +441,19 @@ pipeline {
                 }
             }
 
+            stage('Install sshpass') {
+                steps {
+                    bat '''
+                        if ! command -v sshpass &> /dev/null; then
+                            echo "Installing sshpass..."
+                            sudo apt-get update && sudo apt-get install -y sshpass
+                        else
+                            echo "sshpass already installed."
+                        fi
+                    '''
+                }
+            }
+
             stage('Test SSH Connection') {
                 steps {
                     withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
