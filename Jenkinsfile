@@ -41,6 +41,11 @@ pipeline {
             choices: ['develop', 'staging', 'main'],
             description: 'Target deployment environment'
         )
+        choice(
+            name: 'DEPLOYMENT_TYPE',
+            choices: ['docker-compose', 'local', 'skip'],
+            description: 'Select deployment method: docker-compose, local, or skip deployment'
+        )
         booleanParam(
             name: 'RUN_INTEGRATION_TESTS',
             defaultValue: true,
