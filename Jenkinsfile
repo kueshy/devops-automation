@@ -687,7 +687,7 @@ pipeline {
 def deployWithDockerCompose() {
     echo "Deploying using Docker Compose..."
 
-    sshagent([SERVER_SSH_CREDENTIALS]) {
+    sshagent(['server-ssh-credentials']) {
         bat """
             ssh ${DEPLOY_USER}@${DEPLOY_SERVER} "
                 cd /opt/ci-cd-pipeline
