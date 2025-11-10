@@ -1,73 +1,3 @@
-// pipeline {
-//     environment{
-//         DOCKERHUB_CREDENTIALS = credentials('dockerhub')
-//     }
-//     agent any
-//
-//     tools {
-//         // Install the Maven version configured as "M3" and add it to the path.
-//         maven "m3"
-//     }
-//
-//     stages{
-//         stage("Build maven"){
-//             steps{
-//                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: '382aff30-5c32-4dbc-acfd-af531b831dd9', url: 'https://github.com/kueshy/devops-automation']])
-//                 bat "mvn clean install"
-//             }
-//         }
-//         stage("Build docker image"){
-//             steps{
-//                 script{
-//                     bat "docker build -t codedev001/devops-integration ."
-//                 }
-//             }
-//         }
-//         stage("Push docker image to docker hub"){
-//             steps{
-//                 script{
-//                     withCredentials([string(credentialsId: 'dockerhub', variable: 'dockerhubpwd')]) {
-//                     bat "docker login -u codedev001 -p ${dockerhubpwd}"
-//                     bat "docker push codedev001/devops-integration"
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
-
-// pipeline{
-//     agent any
-//     tools {
-//         maven 'maven_3_9_11'
-//     }
-//     stages {
-//         stage('Build Maven'){
-//             steps{
-//                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/kueshy/devops-automation']])
-//                 bat 'mvn clean install'
-//             }
-//         }
-//         stage('Build Docker Image'){
-//             steps{
-//                 script {
-//                     bat 'docker build -t codedev001/devops-integration .'
-//                 }
-//             }
-//         }
-//         stage('Push Docker Image to Docker Hub'){
-//             steps{
-//                 script {
-//                     withCredentials([string(credentialsId: 'dockerhub_pwd', variable: 'dockerhub_pwd')]) {
-//                         bat "docker login -u codedev001 -p ${dockerhub_pwd}"
-//                         bat "docker push codedev001/devops-integration"
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
-
 // ===== Jenkinsfile for Monolithic Application =====
 
 pipeline {
@@ -79,11 +9,10 @@ pipeline {
 
         // Docker configuration
         DOCKER_REGISTRY = '192.168.4.39:5000'
-        DOCKER_REGISTRY_NAME = 'codedev001'
+        DOCKER_REGISTRY_HOST = "192.168.4.39:5000"
         DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
         SERVER_REGISTRY_CREDENTIALS = 'registry-credentials'
-//         DOCKER_IMAGE = "${APP_NAME}"
-        DOCKER_IMAGE = "${DOCKER_REGISTRY}/${APP_NAME}".toLowerCase()
+        DOCKER_IMAGE = "${DOCKER_REGISTRY_HOST}/${APP_NAME}".toLowerCase()
 
         // Maven configuration
         MAVEN_OPTS = '-Xmx2048m -Xms1024m'
@@ -98,7 +27,6 @@ pipeline {
             script: "git rev-parse --short HEAD",
             returnStdout: true
         ).trim()
-//         IMAGE_TAG = "${VERSION}-${GIT_COMMIT_SHORT}"
         IMAGE_TAG = Math.abs(new Random().nextInt(2000000000)).toString()
     }
 
@@ -126,17 +54,9 @@ pipeline {
     }
 
     triggers {
-//         pollSCM('H/5 * * * *')
+//         pollSCM('*/5 * * * *')
         githubPush()
     }
-
-//     options {
-//         buildDiscarder(logRotator(numToKeepStr: '10'))
-//         timeout(time: 1, unit: 'HOURS')
-//         disableConcurrentBuilds()
-//         timestamps()
-//         ansiColor('xterm')
-//     }
 
     stages {
         stage('Checkout') {
@@ -357,37 +277,26 @@ pipeline {
                    script {
                        echo "Building Docker image..."
 
-                       def registryHost = "192.168.4.39:5000"
-                       def appName = "devops-automation"
-                       def version = env.BUILD_NUMBER
                        def gitCommit = bat(
                            script: "@echo off && for /f %%i in ('git rev-parse --short HEAD') do echo %%i",
                            returnStdout: true
                        ).trim()
-//                        def imageTag = "${version}-${gitCommit}"
-                       def imageTag = "${IMAGE_TAG}" //Math.abs(new Random().nextInt(2000000000)).toString()
-//                        def dockerImage = "${appName}".toLowerCase()
-                       def dockerImage = "${DOCKER_REGISTRY}/${appName}".toLowerCase()
 
-                       echo "Building image tag: ${imageTag}"
+                       echo "Building image tag: ${IMAGE_TAG}"
 
-                       echo "Docker image: ${dockerImage}:${imageTag}"
+                       echo "Docker image: ${DOCKER_IMAGE}:${IMAGE_TAG}"
 
-                       docker.build("${appName}:${imageTag}", "--build-arg JAR_FILE=target/${appName}.jar .")
-//                        bat "docker tag ${dockerImage}:${imageTag} ${dockerImage}:${env.ENVIRONMENT}-latest"
+                       docker.build("${APP_NAME}:${IMAGE_TAG}", "--build-arg JAR_FILE=target/${APP_NAME}.jar .")
 
-                       bat "docker images ${appName}:${imageTag}"
+                       bat "docker images ${APP_NAME}:${IMAGE_TAG}"
 
                        bat """
-                           docker tag ${appName}:${imageTag} ${dockerImage}:${imageTag}
-                           docker tag ${appName}:${imageTag} ${dockerImage}:latest
+                           docker tag ${APP_NAME}:${IMAGE_TAG} ${DOCKER_IMAGE}:${IMAGE_TAG}
+                           docker tag ${APP_NAME}:${IMAGE_TAG} ${DOCKER_IMAGE}:latest
                        """
 
-                       echo "Docker image built and tagged: ${dockerImage}:${imageTag}"
+                       echo "Docker image built and tagged: ${DOCKER_IMAGE}:${IMAGE_TAG}"
 
-                       // Save values for later stages
-                       env.DOCKER_IMAGE = dockerImage
-                       env.IMAGE_TAG = imageTag
                    }
                }
            }
