@@ -19,7 +19,7 @@ pipeline {
         DEPLOY_SERVER = '192.168.4.39'
         SERVER_SSH_CREDENTIALS = 'server-ssh-credentials'
         REGISTRY_CREDENTIALS_PSW = 'ams123'
-        REGISTRY_CREDENTIALS_USR = 'registry-usr'
+        REGISTRY_CREDENTIALS_USR = 'ams'
 
         // Maven configuration
         MAVEN_OPTS = '-Xmx2048m -Xms1024m'
@@ -699,7 +699,7 @@ def deployWithDockerCompose() {
                 "cd /opt/ci-cd-pipeline && \
                  echo ===================================================== && \
                  echo Logging into private Docker registry... && \
-                 docker login %DOCKER_REGISTRY% -u ams -p %REGISTRY_CREDENTIALS_PSW% && \
+                 docker login %DOCKER_REGISTRY% -u %REGISTRY_CREDENTIALS_USR% -p %REGISTRY_CREDENTIALS_PSW% && \
                  echo ===================================================== && \
                  echo Pulling latest image version... && \
                  docker-compose pull && \
