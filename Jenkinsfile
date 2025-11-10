@@ -697,11 +697,28 @@ def deployWithDockerCompose() {
             echo ==== Connecting to ${DEPLOY_SERVER} ====
             plink -ssh %SSH_USER%@${DEPLOY_SERVER} -pw %SSH_PASS% ^
                 "cd /opt/ci-cd-pipeline && ^
+
+                 echo ===================================================== && ^
+                 echo 🔐 Logging into private Docker registry... && ^
                  docker login ${DOCKER_REGISTRY} -u %SSH_USER% -p %SSH_PASS% && ^
+
+                 echo ===================================================== && ^
+                 echo 🔄 Pulling latest image version... && ^
                  docker-compose pull && ^
+
+                 echo ===================================================== && ^
+                 echo 🧹 Stopping and removing old containers... && ^
                  docker-compose down && ^
+
+                 echo ===================================================== && ^
+                 echo 🚀 Starting new containers... && ^
                  docker-compose up -d && ^
+
+                 echo ===================================================== && ^
+                 echo 📋 Verifying container status... && ^
                  docker-compose ps && ^
+
+                 echo ===================================================== && ^
                  echo ✅ Deployment completed"
         """
     }
