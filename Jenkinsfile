@@ -313,53 +313,53 @@ pipeline {
                }
            }
 
-//         stage('Image Security Scan') {
-//             when {
-//                 expression { params.RUN_SECURITY_SCAN }
-//             }
-//             steps {
-//                 script {
-//                     echo "Scanning Docker image for vulnerabilities..."
-//
-//                     sh """
-//                         trivy image \
-//                             --severity HIGH,CRITICAL \
-//                             --format json \
-//                             --output target/trivy-report.json \
-//                             ${DOCKER_IMAGE}:${IMAGE_TAG}
-//                     """
-//
-//                     // Check if critical vulnerabilities found
-//                     def trivyReport = readJSON file: 'target/trivy-report.json'
-//                     def criticalCount = 0
-//
-//                     if (trivyReport.Results) {
-//                         trivyReport.Results.each { result ->
-//                             if (result.Vulnerabilities) {
-//                                 criticalCount += result.Vulnerabilities.findAll {
-//                                     it.Severity == 'CRITICAL'
-//                                 }.size()
-//                             }
-//                         }
-//                     }
-//
-//                     echo "Found ${criticalCount} critical vulnerabilities"
-//
-//                     if (criticalCount > 0) {
-//                         error "Found ${criticalCount} critical vulnerabilities in Docker image"
-//                     }
-//                 }
-//             }
-//             post {
-//                 always {
-//                     publishHTML(target: [
-//                         reportDir: 'target',
-//                         reportFiles: 'trivy-report.json',
-//                         reportName: 'Trivy Security Report'
-//                     ])
-//                 }
-//             }
-//         }
+        stage('Image Security Scan') {
+            when {
+                expression { params.RUN_SECURITY_SCAN }
+            }
+            steps {
+                script {
+                    echo "Scanning Docker image for vulnerabilities..."
+
+                    bat """
+                        trivy image \
+                            --severity HIGH,CRITICAL \
+                            --format json \
+                            --output target/trivy-report.json \
+                            ${DOCKER_IMAGE}:${IMAGE_TAG}
+                    """
+
+                    // Check if critical vulnerabilities found
+                    def trivyReport = readJSON file: 'target/trivy-report.json'
+                    def criticalCount = 0
+
+                    if (trivyReport.Results) {
+                        trivyReport.Results.each { result ->
+                            if (result.Vulnerabilities) {
+                                criticalCount += result.Vulnerabilities.findAll {
+                                    it.Severity == 'CRITICAL'
+                                }.size()
+                            }
+                        }
+                    }
+
+                    echo "Found ${criticalCount} critical vulnerabilities"
+
+                    if (criticalCount > 0) {
+                        error "Found ${criticalCount} critical vulnerabilities in Docker image"
+                    }
+                }
+            }
+            post {
+                always {
+                    publishHTML(target: [
+                        reportDir: 'target',
+                        reportFiles: 'trivy-report.json',
+                        reportName: 'Trivy Security Report'
+                    ])
+                }
+            }
+        }
 //
 //         stage('Push to Registry') {
 //             when {
@@ -454,31 +454,31 @@ pipeline {
 //                 }
 //             }
 
-            stage('Deploy to Server') {
-                steps {
-                    script {
-                        echo "🚀 Deploying to ${params.ENVIRONMENT}..."
-
-                        // Choose deployment method
-                        switch(params.DEPLOYMENT_TYPE) {
-                            case 'docker-compose':
-                                deployWithDockerCompose()
-                                break
-                            case 'docker-swarm':
-                                deployWithDockerSwarm()
-                                break
-                            case 'kubernetes':
-                                deployToKubernetes()
-                                break
-                            case 'manual':
-                                deployManually()
-                                break
-                            default:
-                                error "Unknown deployment type: ${params.DEPLOYMENT_TYPE}"
-                        }
-                    }
-                }
-                }
+//             stage('Deploy to Server') {
+//                 steps {
+//                     script {
+//                         echo "🚀 Deploying to ${params.ENVIRONMENT}..."
+//
+//                         // Choose deployment method
+//                         switch(params.DEPLOYMENT_TYPE) {
+//                             case 'docker-compose':
+//                                 deployWithDockerCompose()
+//                                 break
+//                             case 'docker-swarm':
+//                                 deployWithDockerSwarm()
+//                                 break
+//                             case 'kubernetes':
+//                                 deployToKubernetes()
+//                                 break
+//                             case 'manual':
+//                                 deployManually()
+//                                 break
+//                             default:
+//                                 error "Unknown deployment type: ${params.DEPLOYMENT_TYPE}"
+//                         }
+//                     }
+//                 }
+//                 }
 
 //                 stage('Health Check') {
 //                     steps {
