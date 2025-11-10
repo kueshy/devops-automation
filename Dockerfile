@@ -31,7 +31,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 
 # Copy JAR from build stage
-ARG JAR_FILE=target/devops-integration.jar
+ARG JAR_FILE=target/*
 COPY --from=build /app/${JAR_FILE} app.jar
 
 # Change ownership
