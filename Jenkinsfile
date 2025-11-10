@@ -431,32 +431,32 @@ pipeline {
                 }
             }
 
-//         stage('Deploy to Server') {
-//                     steps {
-//                         script {
-//                             echo "🚀 Deploying to ${params.ENVIRONMENT}..."
-//
-//                             // Choose deployment method
-//                             switch(params.DEPLOYMENT_TYPE) {
-//                                 case 'docker-compose':
-//                                     deployWithDockerCompose()
-//                                     break
-//                                 case 'docker-swarm':
-//                                     deployWithDockerSwarm()
-//                                     break
-//                                 case 'kubernetes':
-//                                     deployToKubernetes()
-//                                     break
-//                                 case 'manual':
-//                                     deployManually()
-//                                     break
-//                                 default:
-//                                     error "Unknown deployment type: ${params.DEPLOYMENT_TYPE}"
-//                             }
-//                         }
-//                     }
-//                 }
-//
+            stage('Deploy to Server') {
+                steps {
+                    script {
+                        echo "🚀 Deploying to ${params.ENVIRONMENT}..."
+
+                        // Choose deployment method
+                        switch(params.DEPLOYMENT_TYPE) {
+                            case 'docker-compose':
+                                deployWithDockerCompose()
+                                break
+                            case 'docker-swarm':
+                                deployWithDockerSwarm()
+                                break
+                            case 'kubernetes':
+                                deployToKubernetes()
+                                break
+                            case 'manual':
+                                deployManually()
+                                break
+                            default:
+                                error "Unknown deployment type: ${params.DEPLOYMENT_TYPE}"
+                        }
+                    }
+                }
+                }
+
 //                 stage('Health Check') {
 //                     steps {
 //                         script {
@@ -663,34 +663,34 @@ pipeline {
 
 // ===== 2. Deployment Functions =====
 
-// def deployWithDockerCompose() {
-//     echo "Deploying with Docker Compose..."
-//
-//     sshagent(credentials: ['deploy-ssh-key']) {
-//         bat """
-//             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
-//                 cd /opt/ams-health
-//
-//                 # Update docker-compose.yml with new image
-//                 export IMAGE_TAG=${IMAGE_TAG}
-//
-//                 # Pull new image
-//                 docker-compose pull
-//
-//                 # Stop old containers
-//                 docker-compose down
-//
-//                 # Start new containers
-//                 docker-compose up -d
-//
-//                 # Verify containers are running
-//                 docker-compose ps
-//
-//                 echo "✅ Deployment completed!"
-// EOF
-//         """
-//     }
-// }
+def deployWithDockerCompose() {
+    echo "Deploying with Docker Compose..."
+
+    sshagent(credentials: ['deploy-ssh-key']) {
+        bat """
+            ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
+                cd /opt/ci-cd-pipeline
+
+                # Update docker-compose.yml with new image
+                export IMAGE_TAG=${IMAGE_TAG}
+
+                # Pull new image
+                docker-compose pull
+
+                # Stop old containers
+                docker-compose down
+
+                # Start new containers
+                docker-compose up -d
+
+                # Verify containers are running
+                docker-compose ps
+
+                echo "✅ Deployment completed!"
+EOF
+        """
+    }
+}
 //
 // def deployWithDockerSwarm() {
 //     echo "Deploying with Docker Swarm..."
