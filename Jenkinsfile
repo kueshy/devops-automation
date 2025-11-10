@@ -685,33 +685,57 @@ pipeline {
 // ===== 2. Deployment Functions =====
 
 def deployWithDockerCompose() {
-    echo "Deploying using Docker Compose..."
+    echo "🚀 Deploying using Docker Compose with username/password..."
 
-    sshagent(credentials: ['server-ssh-credentials']) {
+    withCredentials([usernamePassword(credentialsId: 'server-ssh-credentials', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
+        // Use PowerShell-compatible command
         bat """
-            ssh ${DEPLOY_USER}@${DEPLOY_SERVER} "
-                cd /opt/ci-cd-pipeline
+            # echo open ${DEPLOY_SERVER} > sftp.txt
+            # echo ${SSH_USER} >> sftp.txt
+            # echo ${SSH_PASS} >> sftp.txt
 
-                # Update .env file with new image tag
-                # echo 'IMAGE_TAG=${IMAGE_TAG}' > .env
-                # echo 'REGISTRY=${PRIVATE_REGISTRY}' >> .env
-
-                # Login to registry
-                echo "Login to registry"
-                docker login ${PRIVATE_REGISTRY} -u ${REGISTRY_CREDENTIALS_USR} -p ${REGISTRY_CREDENTIALS_PSW}
-
-                # Pull and restart
-                docker-compose pull
-                docker-compose up -d
-
-                # Check status
-                docker-compose ps
-
-                echo '✅ Docker Compose deployment completed!'
-            "
+            echo ==== Connecting to ${DEPLOY_SERVER} ====
+            plink -ssh %SSH_USER%@${DEPLOY_SERVER} -pw %SSH_PASS% ^
+                "cd /opt/ci-cd-pipeline && ^
+                 docker login ${DOCKER_REGISTRY} -u ${REGISTRY_CREDENTIALS_USR} -p ${REGISTRY_CREDENTIALS_PSW} && ^
+                 docker-compose pull && ^
+                 docker-compose down && ^
+                 docker-compose up -d && ^
+                 docker-compose ps && ^
+                 echo ✅ Deployment completed"
         """
     }
 }
+
+
+// def deployWithDockerCompose() {
+//     echo "Deploying using Docker Compose..."
+//
+//     sshagent(credentials: ['server-ssh-credentials']) {
+//         bat """
+//             ssh ${DEPLOY_USER}@${DEPLOY_SERVER} "
+//                 cd /opt/ci-cd-pipeline
+//
+//                 # Update .env file with new image tag
+//                 # echo 'IMAGE_TAG=${IMAGE_TAG}' > .env
+//                 # echo 'REGISTRY=${PRIVATE_REGISTRY}' >> .env
+//
+//                 # Login to registry
+//                 echo "Login to registry"
+//                 docker login ${PRIVATE_REGISTRY} -u ${REGISTRY_CREDENTIALS_USR} -p ${REGISTRY_CREDENTIALS_PSW}
+//
+//                 # Pull and restart
+//                 docker-compose pull
+//                 docker-compose up -d
+//
+//                 # Check status
+//                 docker-compose ps
+//
+//                 echo '✅ Docker Compose deployment completed!'
+//             "
+//         """
+//     }
+// }
 
 // def deployWithDockerCompose() {
 //     echo "Deploying with Docker Compose..."
