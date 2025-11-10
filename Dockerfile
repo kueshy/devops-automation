@@ -31,8 +31,8 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 
 # Copy JAR from build stage
-ARG JAR_FILE=target/*.jar
-COPY --from=build /app/${JAR_FILE} app.jar
+#ARG JAR_FILE=target/*.jar
+COPY --from=build /app/target/*.jar app.jar
 
 # Change ownership
 RUN chown -R appuser:appgroup /app
