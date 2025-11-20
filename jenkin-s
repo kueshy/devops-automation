@@ -1,3 +1,73 @@
+// pipeline {
+//     environment{
+//         DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+//     }
+//     agent any
+//
+//     tools {
+//         // Install the Maven version configured as "M3" and add it to the path.
+//         maven "m3"
+//     }
+//
+//     stages{
+//         stage("Build maven"){
+//             steps{
+//                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: '382aff30-5c32-4dbc-acfd-af531b831dd9', url: 'https://github.com/kueshy/devops-automation']])
+//                 bat "mvn clean install"
+//             }
+//         }
+//         stage("Build docker image"){
+//             steps{
+//                 script{
+//                     bat "docker build -t codedev001/devops-integration ."
+//                 }
+//             }
+//         }
+//         stage("Push docker image to docker hub"){
+//             steps{
+//                 script{
+//                     withCredentials([string(credentialsId: 'dockerhub', variable: 'dockerhubpwd')]) {
+//                     bat "docker login -u codedev001 -p ${dockerhubpwd}"
+//                     bat "docker push codedev001/devops-integration"
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
+
+// pipeline{
+//     agent any
+//     tools {
+//         maven 'maven_3_9_11'
+//     }
+//     stages {
+//         stage('Build Maven'){
+//             steps{
+//                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/kueshy/devops-automation']])
+//                 bat 'mvn clean install'
+//             }
+//         }
+//         stage('Build Docker Image'){
+//             steps{
+//                 script {
+//                     bat 'docker build -t codedev001/devops-integration .'
+//                 }
+//             }
+//         }
+//         stage('Push Docker Image to Docker Hub'){
+//             steps{
+//                 script {
+//                     withCredentials([string(credentialsId: 'dockerhub_pwd', variable: 'dockerhub_pwd')]) {
+//                         bat "docker login -u codedev001 -p ${dockerhub_pwd}"
+//                         bat "docker push codedev001/devops-integration"
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
+
 // ===== Jenkinsfile for Monolithic Application =====
 
 pipeline {
@@ -9,17 +79,11 @@ pipeline {
 
         // Docker configuration
         DOCKER_REGISTRY = '192.168.4.39:5000'
-        DOCKER_REGISTRY_HOST = "192.168.4.39:5000"
+        DOCKER_REGISTRY_NAME = 'codedev001'
         DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
         SERVER_REGISTRY_CREDENTIALS = 'registry-credentials'
-        DOCKER_IMAGE = "${DOCKER_REGISTRY_HOST}/${APP_NAME}".toLowerCase()
-
-        // Deploy
-        DEPLOY_USER = 'root'
-        DEPLOY_SERVER = '192.168.4.39'
-        SERVER_SSH_CREDENTIALS = 'server-ssh-credentials'
-        REGISTRY_CREDENTIALS_PSW = 'ams123'
-        REGISTRY_CREDENTIALS_USR = 'ams'
+//         DOCKER_IMAGE = "${APP_NAME}"
+        DOCKER_IMAGE = "${DOCKER_REGISTRY}/${APP_NAME}".toLowerCase()
 
         // Maven configuration
         MAVEN_OPTS = '-Xmx2048m -Xms1024m'
@@ -34,6 +98,7 @@ pipeline {
             script: "git rev-parse --short HEAD",
             returnStdout: true
         ).trim()
+//         IMAGE_TAG = "${VERSION}-${GIT_COMMIT_SHORT}"
         IMAGE_TAG = Math.abs(new Random().nextInt(2000000000)).toString()
     }
 
@@ -42,11 +107,6 @@ pipeline {
             name: 'ENVIRONMENT',
             choices: ['develop', 'staging', 'main'],
             description: 'Target deployment environment'
-        )
-        choice(
-            name: 'DEPLOYMENT_TYPE',
-            choices: ['docker-compose', 'local', 'skip'],
-            description: 'Select deployment method: docker-compose, local, or skip deployment'
         )
         booleanParam(
             name: 'RUN_INTEGRATION_TESTS',
@@ -66,9 +126,17 @@ pipeline {
     }
 
     triggers {
-        pollSCM('*/5 * * * *')
+//         pollSCM('H/5 * * * *')
         githubPush()
     }
+
+//     options {
+//         buildDiscarder(logRotator(numToKeepStr: '10'))
+//         timeout(time: 1, unit: 'HOURS')
+//         disableConcurrentBuilds()
+//         timestamps()
+//         ansiColor('xterm')
+//     }
 
     stages {
         stage('Checkout') {
@@ -289,77 +357,88 @@ pipeline {
                    script {
                        echo "Building Docker image..."
 
+                       def registryHost = "192.168.4.39:5000"
+                       def appName = "devops-automation"
+                       def version = env.BUILD_NUMBER
                        def gitCommit = bat(
                            script: "@echo off && for /f %%i in ('git rev-parse --short HEAD') do echo %%i",
                            returnStdout: true
                        ).trim()
+//                        def imageTag = "${version}-${gitCommit}"
+                       def imageTag = "${IMAGE_TAG}" //Math.abs(new Random().nextInt(2000000000)).toString()
+//                        def dockerImage = "${appName}".toLowerCase()
+                       def dockerImage = "${DOCKER_REGISTRY}/${appName}".toLowerCase()
 
-                       echo "Building image tag: ${IMAGE_TAG}"
+                       echo "Building image tag: ${imageTag}"
 
-                       echo "Docker image: ${DOCKER_IMAGE}:${IMAGE_TAG}"
+                       echo "Docker image: ${dockerImage}:${imageTag}"
 
-                       docker.build("${APP_NAME}:${IMAGE_TAG}", "--build-arg JAR_FILE=target/${APP_NAME}.jar .")
+                       docker.build("${appName}:${imageTag}", "--build-arg JAR_FILE=target/${appName}.jar .")
+//                        bat "docker tag ${dockerImage}:${imageTag} ${dockerImage}:${env.ENVIRONMENT}-latest"
 
-                       bat "docker images ${APP_NAME}:${IMAGE_TAG}"
+                       bat "docker images ${appName}:${imageTag}"
 
                        bat """
-                           docker tag ${APP_NAME}:${IMAGE_TAG} ${DOCKER_IMAGE}:${IMAGE_TAG}
-                           docker tag ${APP_NAME}:${IMAGE_TAG} ${DOCKER_IMAGE}:latest
+                           docker tag ${appName}:${imageTag} ${dockerImage}:${imageTag}
+                           docker tag ${appName}:${imageTag} ${dockerImage}:latest
                        """
 
-                       echo "Docker image built and tagged: ${DOCKER_IMAGE}:${IMAGE_TAG}"
+                       echo "Docker image built and tagged: ${dockerImage}:${imageTag}"
 
+                       // Save values for later stages
+                       env.DOCKER_IMAGE = dockerImage
+                       env.IMAGE_TAG = imageTag
                    }
                }
            }
 
-        stage('Image Security Scan') {
-            when {
-                expression { params.RUN_SECURITY_SCAN }
-            }
-            steps {
-                script {
-                    echo "Scanning Docker image for vulnerabilities..."
-
-                    bat """
-                        trivy image \
-                            --severity HIGH,CRITICAL \
-                            --format json \
-                            --output target/trivy-report.json \
-                            ${DOCKER_IMAGE}:${IMAGE_TAG}
-                    """
-
-                    // Check if critical vulnerabilities found
-                    def trivyReport = readJSON file: 'target/trivy-report.json'
-                    def criticalCount = 0
-
-                    if (trivyReport.Results) {
-                        trivyReport.Results.each { result ->
-                            if (result.Vulnerabilities) {
-                                criticalCount += result.Vulnerabilities.findAll {
-                                    it.Severity == 'CRITICAL'
-                                }.size()
-                            }
-                        }
-                    }
-
-                    echo "Found ${criticalCount} critical vulnerabilities"
-
-                    if (criticalCount > 0) {
-                        error "Found ${criticalCount} critical vulnerabilities in Docker image"
-                    }
-                }
-            }
-            post {
-                always {
-                    publishHTML(target: [
-                        reportDir: 'target',
-                        reportFiles: 'trivy-report.json',
-                        reportName: 'Trivy Security Report'
-                    ])
-                }
-            }
-        }
+//         stage('Image Security Scan') {
+//             when {
+//                 expression { params.RUN_SECURITY_SCAN }
+//             }
+//             steps {
+//                 script {
+//                     echo "Scanning Docker image for vulnerabilities..."
+//
+//                     sh """
+//                         trivy image \
+//                             --severity HIGH,CRITICAL \
+//                             --format json \
+//                             --output target/trivy-report.json \
+//                             ${DOCKER_IMAGE}:${IMAGE_TAG}
+//                     """
+//
+//                     // Check if critical vulnerabilities found
+//                     def trivyReport = readJSON file: 'target/trivy-report.json'
+//                     def criticalCount = 0
+//
+//                     if (trivyReport.Results) {
+//                         trivyReport.Results.each { result ->
+//                             if (result.Vulnerabilities) {
+//                                 criticalCount += result.Vulnerabilities.findAll {
+//                                     it.Severity == 'CRITICAL'
+//                                 }.size()
+//                             }
+//                         }
+//                     }
+//
+//                     echo "Found ${criticalCount} critical vulnerabilities"
+//
+//                     if (criticalCount > 0) {
+//                         error "Found ${criticalCount} critical vulnerabilities in Docker image"
+//                     }
+//                 }
+//             }
+//             post {
+//                 always {
+//                     publishHTML(target: [
+//                         reportDir: 'target',
+//                         reportFiles: 'trivy-report.json',
+//                         reportName: 'Trivy Security Report'
+//                     ])
+//                 }
+//             }
+//         }
 //
 //         stage('Push to Registry') {
 //             when {
@@ -443,43 +522,32 @@ pipeline {
                 }
             }
 
-//             stage('Test SSH Connection') {
-//                 steps {
-//                     withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
-//                         bat '''
-//                             echo "Testing SSH connection to $SSH_USER@192.168.4.39 ..."
-//                             sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@192.168.4.39 "echo Connected successfully && hostname && uptime"
-//                         '''
-//                     }
-//                 }
-//             }
-
-//             stage('Deploy to Server') {
-//                 steps {
-//                     script {
-//                         echo "🚀 Deploying to ${params.ENVIRONMENT}..."
+//         stage('Deploy to Server') {
+//                     steps {
+//                         script {
+//                             echo "🚀 Deploying to ${params.ENVIRONMENT}..."
 //
-//                         // Choose deployment method
-//                         switch(params.DEPLOYMENT_TYPE) {
-//                             case 'docker-compose':
-//                                 deployWithDockerCompose()
-//                                 break
-//                             case 'docker-swarm':
-//                                 deployWithDockerSwarm()
-//                                 break
-//                             case 'kubernetes':
-//                                 deployToKubernetes()
-//                                 break
-//                             case 'manual':
-//                                 deployManually()
-//                                 break
-//                             default:
-//                                 error "Unknown deployment type: ${params.DEPLOYMENT_TYPE}"
+//                             // Choose deployment method
+//                             switch(params.DEPLOYMENT_TYPE) {
+//                                 case 'docker-compose':
+//                                     deployWithDockerCompose()
+//                                     break
+//                                 case 'docker-swarm':
+//                                     deployWithDockerSwarm()
+//                                     break
+//                                 case 'kubernetes':
+//                                     deployToKubernetes()
+//                                     break
+//                                 case 'manual':
+//                                     deployManually()
+//                                     break
+//                                 default:
+//                                     error "Unknown deployment type: ${params.DEPLOYMENT_TYPE}"
+//                             }
 //                         }
 //                     }
 //                 }
-//                 }
-
+//
 //                 stage('Health Check') {
 //                     steps {
 //                         script {
@@ -686,187 +754,33 @@ pipeline {
 
 // ===== 2. Deployment Functions =====
 
-def deployWithDockerCompose() {
-    echo "Deploying using Docker Compose with username/password..."
-
-    withCredentials([usernamePassword(credentialsId: 'server-ssh-credentials', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
-        bat '''
-            echo =====================================================
-            echo Connecting to %DEPLOY_SERVER% as %SSH_USER% ...
-            echo =====================================================
-
-            plink -ssh %SSH_USER%@%DEPLOY_SERVER% -pw %SSH_PASS% ^
-                "cd /opt/ci-cd-pipeline && \
-                 echo ===================================================== && \
-                 echo Logging into private Docker registry... && \
-                 docker login %DOCKER_REGISTRY% -u %REGISTRY_CREDENTIALS_USR% -p %REGISTRY_CREDENTIALS_PSW% && \
-                 echo ===================================================== && \
-                 echo Pulling latest image version... && \
-                 docker-compose pull && \
-                 echo ===================================================== && \
-                 echo Stopping and removing old containers... && \
-                 docker-compose down && \
-                 echo ===================================================== && \
-                 echo Starting new containers... && \
-                 docker-compose up -d && \
-                 echo ===================================================== && \
-                 echo Verifying container status... && \
-                 docker-compose ps && \
-                 echo ===================================================== && \
-                 echo Deployment completed successfully!"
-        '''
-    }
-}
-
-// def deployWithDockerCompose() {
-//     echo "🚀 Deploying using Docker Compose with username/password..."
-//
-//     withCredentials([usernamePassword(credentialsId: 'server-ssh-credentials', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
-//         // Use PowerShell-compatible command
-//         bat """
-//             # echo open ${DEPLOY_SERVER} > sftp.txt
-//             # echo ${SSH_USER} >> sftp.txt
-//             # echo ${SSH_PASS} >> sftp.txt
-//
-//             echo ==== Connecting to ${DEPLOY_SERVER} ====
-//             plink -ssh %SSH_USER%@${DEPLOY_SERVER} -pw %SSH_PASS% ^
-//                 "cd /opt/ci-cd-pipeline && ^
-//
-//                  echo ===================================================== && ^
-//                  echo 🔐 Logging into private Docker registry... && ^
-//                  docker login ${DOCKER_REGISTRY} -u %SSH_USER% -p %SSH_PASS% && ^
-//
-//                  echo ===================================================== && ^
-//                  echo 🔄 Pulling latest image version... && ^
-//                  docker-compose pull && ^
-//
-//                  echo ===================================================== && ^
-//                  echo 🧹 Stopping and removing old containers... && ^
-//                  docker-compose down && ^
-//
-//                  echo ===================================================== && ^
-//                  echo 🚀 Starting new containers... && ^
-//                  docker-compose up -d && ^
-//
-//                  echo ===================================================== && ^
-//                  echo 📋 Verifying container status... && ^
-//                  docker-compose ps && ^
-//
-//                  echo ===================================================== && ^
-//                  echo ✅ Deployment completed"
-//         """
-//     }
-// }
-
-
-// def deployWithDockerCompose() {
-//     echo "Deploying using Docker Compose..."
-//
-//     sshagent(credentials: ['server-ssh-credentials']) {
-//         bat """
-//             ssh ${DEPLOY_USER}@${DEPLOY_SERVER} "
-//                 cd /opt/ci-cd-pipeline
-//
-//                 # Update .env file with new image tag
-//                 # echo 'IMAGE_TAG=${IMAGE_TAG}' > .env
-//                 # echo 'REGISTRY=${PRIVATE_REGISTRY}' >> .env
-//
-//                 # Login to registry
-//                 echo "Login to registry"
-//                 docker login ${PRIVATE_REGISTRY} -u ${REGISTRY_CREDENTIALS_USR} -p ${REGISTRY_CREDENTIALS_PSW}
-//
-//                 # Pull and restart
-//                 docker-compose pull
-//                 docker-compose up -d
-//
-//                 # Check status
-//                 docker-compose ps
-//
-//                 echo '✅ Docker Compose deployment completed!'
-//             "
-//         """
-//     }
-// }
-
 // def deployWithDockerCompose() {
 //     echo "Deploying with Docker Compose..."
-
-//    withCredentials([sshUserPrivateKey(credentialsId: 'SERVER_SSH_CREDENTIALS', keyFileVariable: 'SSH_KEY')]) {
-//            sh """
-//            ssh -i $SSH_KEY -o StrictHostKeyChecking=no root@192.168.4.39 '
-//                cd /opt/devops-automation &&
-//                sed -i "s|image: 192.168.4.39:5000/devops-automation:.*|image: 192.168.4.39:5000/devops-automation:${imageTag}|" docker-compose.yml &&
-//                docker-compose pull &&
-//                docker-compose down &&
-//                docker-compose up -d
-//            '
-//            """
-//        }
-
-//     sshagent(credentials: [SERVER_SSH_CREDENTIALS]) {
-//     withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
+//
+//     sshagent(credentials: ['deploy-ssh-key']) {
 //         bat """
-//             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER}
-//                 cd /opt/ci-cd-pipeline
+//             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
+//                 cd /opt/ams-health
 //
 //                 # Update docker-compose.yml with new image
 //                 export IMAGE_TAG=${IMAGE_TAG}
 //
 //                 # Pull new image
-//                 echo "🔄 Pulling latest image..."
 //                 docker-compose pull
 //
 //                 # Stop old containers
-//                 echo "🧹 Stopping old containers..."
 //                 docker-compose down
 //
 //                 # Start new containers
-//                 echo "🚀 Starting new containers..."
 //                 docker-compose up -d
 //
 //                 # Verify containers are running
 //                 docker-compose ps
 //
 //                 echo "✅ Deployment completed!"
+// EOF
 //         """
 //     }
-//     withCredentials([usernamePassword(credentialsId: SERVER_SSH_CREDENTIALS, usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
-//         powershell '''
-//             $server = "192.168.4.39"
-//             $username = $env:SSH_USER
-//             $password = $env:SSH_PASS
-//             $imageTag = $env:IMAGE_TAG
-//
-//             Write-Host "🔗 Connecting to $server as $username ..."
-//
-//             # Verify plink is available
-//             if (-not (Get-Command plink.exe -ErrorAction SilentlyContinue)) {
-//                 Write-Error "❌ plink.exe not found. Please install PuTTY and add it to PATH."
-//                 exit 1
-//             }
-//
-//             $remoteCommand = @"
-//     cd /opt/ci-cd-pipeline
-//     echo '🔄 Pulling latest image...'
-//     docker-compose pull
-//     echo '🧹 Stopping old containers...'
-//     docker-compose down
-//     echo '🚀 Starting new containers...'
-//     docker-compose up -d
-//     docker-compose ps
-//     echo '✅ Deployment completed!'
-//     "@
-//
-//             # Execute remotely
-//             plink.exe -ssh $username@$server -pw $password "$remoteCommand"
-//
-//             if ($LASTEXITCODE -ne 0) {
-//                 Write-Error "❌ Remote deployment failed!"
-//                 exit 1
-//             }
-//         '''
-//     }
-//
 // }
 //
 // def deployWithDockerSwarm() {
@@ -966,63 +880,6 @@ def deployWithDockerCompose() {
 //
 //                 echo "✅ Rollback completed!"
 // EOF
-//         """
-//     }
-// }
-
-//
-// stage('Terraform Plan') {
-//             steps {
-//                 script {
-//                     // Plan Terraform changes based on the branch
-//                     if (env.BRANCH_NAME == 'development') {
-//                         sh 'terraform plan -var-file=dev.tfvars'
-//                     } else if (env.BRANCH_NAME == 'staging') {
-//                         sh 'terraform plan -var-file=staging.tfvars'
-//                     } else if (env.BRANCH_NAME == 'production') {
-//                         sh 'terraform plan -var-file=prod.tfvars'
-//                     }
-//                 }
-//             }
-//         }
-//
-//         stage('Terraform Apply') {
-//             steps {
-//                 script {
-//                     // Apply Terraform changes based on the branch
-//                     if (env.BRANCH_NAME == 'development') {
-//                         sh 'terraform apply -var-file=dev.tfvars -auto-approve'
-//                     } else if (env.BRANCH_NAME == 'staging') {
-//                         sh 'terraform apply -var-file=staging.tfvars -auto-approve'
-//                     } else if (env.BRANCH_NAME == 'production') {
-//                         sh 'terraform apply -var-file=prod.tfvars -auto-approve'
-//                     }
-//                 }
-//             }
-//         }
-//
-//         stage('Deploy to Kubernetes') {
-//             steps {
-//                 script {
-//                     // Deploy application to Kubernetes cluster
-//                     deployToK8s(env.BRANCH_NAME)
-//                 }
-//             }
-//         }
-//     }
-//
-//     post {
-//         always {
-//             cleanWs()  // Clean workspace after each build
-//         }
-//     }
-// }
-//
-// def deployToK8s(environment) {
-//     withCredentials([string(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-//         sh """
-//         kubectl apply -f k8s/${environment}/deployment.yaml
-//         kubectl apply -f k8s/${environment}/service.yaml
 //         """
 //     }
 // }
